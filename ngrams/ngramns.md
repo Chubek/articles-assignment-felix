@@ -699,45 +699,184 @@ So, let's say we want to split the famous sentence "I scream, you scream, we all
 </svg>       
 
 
-But if we get randy (in the American sense of the word) and get the two grams it would be:
+Now let's get all the 2-, 3-, 4- and 5-grams for a more complex text, shown below:
 
-```python
+```
+I love Chicago deep dish pizza!
+New York style pizza is also good.
+San Francisco pizza, it can be very good
+```
+
+After removing the stropwords and punctions and using this code:
+
+```
 from nltk.util import ngrams
 import re
-sent = "I scream, you scream, we all scream for ice cream!"
+from nltk.corpus import stopwords
+import nltk
+
+nltk.download('stopwords')
+
+sw_set = list(set(stopwords.words('english')))
+
+sent = '''
+I love Chicago deep dish pizza!
+New York style pizza is also good.
+San Francisco pizza, it can be very good
+'''
+
+sent = sent.lower()
+
 sent_rem = re.sub(r"(?!\s)\W", "", sent)
 print("Sentence without puncutation is: ", sent_rem)
-sent_split = re.split(r"\s+", sent_rem)
+
+sent_wo_sw = ' '.join([w for w in sent_rem.split(" ") if w.lower() not in sw_set])
+
+print("W/O stopwords: ", sent_wo_sw)
+
+sent_split = set(re.split(r"\s+", sent_wo_sw))
+
+
 print("2-grams are: ")
 print('\n'.join(list([', '.join(ng) for ng in tuple(ngrams(sent_split, 2))])))
+print("\n\n")
+print("3-grams are: ")
+print('\n'.join(list([', '.join(ng) for ng in tuple(ngrams(sent_split, 3))])))
+print("\n\n")
+print("4-grams are: ")
+print('\n'.join(list([', '.join(ng) for ng in tuple(ngrams(sent_split, 4))])))
+print("\n\n")
+print("5-grams are: ")
+print('\n'.join(list([', '.join(ng) for ng in tuple(ngrams(sent_split, 5))])))
+
 ```
 
 
-We get:
 
-<div class="cc">
-<span>I, scream</span><br>
-<span>scream, you</span><br>
-<span>you, scream</span><br>
-<span>scream, we</span><br>
-<span>we, all</span><br>
-<span>scream, for</span><br>
-<span>for, ice</span><br>
-<span>ice, cream</span>
-</div>
-<style>
-.cc {
-	background-color: lightgray;
-	font-family: monospace;
-	padding: 2rem;
-	border-radius: 1rem;
-}
-</style>
+```
+[nltk_data] Downloading package stopwords to /home/chubak/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+Sentence without puncutation is:  
+i love chicago deep dish pizza
+new york style pizza is also good
+san francisco pizza it can be very good
 
-In other words:
+W/O stopwords:  
+i love chicago deep dish pizza
+new york style pizza also good
+san francisco pizza good
+
+2-grams are: 
+, francisco
+francisco, san
+san, new
+new, york
+york, pizza
+pizza, style
+style, dish
+dish, also
+also, deep
+deep, love
+love, good
+good, chicago
+chicago, i
+
+
+
+3-grams are: 
+, francisco, san
+francisco, san, new
+san, new, york
+new, york, pizza
+york, pizza, style
+pizza, style, dish
+style, dish, also
+dish, also, deep
+also, deep, love
+deep, love, good
+love, good, chicago
+good, chicago, i
+
+
+
+4-grams are: 
+, francisco, san, new
+francisco, san, new, york
+san, new, york, pizza
+new, york, pizza, style
+york, pizza, style, dish
+pizza, style, dish, also
+style, dish, also, deep
+dish, also, deep, love
+also, deep, love, good
+deep, love, good, chicago
+love, good, chicago, i
+
+
+
+5-grams are: 
+, francisco, san, new, york
+francisco, san, new, york, pizza
+san, new, york, pizza, style
+new, york, pizza, style, dish
+york, pizza, style, dish, also
+pizza, style, dish, also, deep
+style, dish, also, deep, love
+dish, also, deep, love, good
+also, deep, love, good, chicago
+deep, love, good, chicago, i
+
+```
+
+
+As we get furthr, this formula starts shaping in our minds:
 
 $$ N_{n-grams} = \begin{pmatrix} \vert S\vert \\ n \end{pmatrix}  $$
 Where $$ \vert S \vert$$ is the size of the sentence expresed in words. Basically, number of n-grams is the combination of the number of words and the n itself.
+
+Use the controls below to generate n-grams for any sentence you want. This will give you a much more clear idea of what they are.
+<div style="display: flex; gap: 0.5rem; flex-direction: column">
+<select id="num-n">
+<option value="1">1 </option>
+<option selected value="2">2 </option>
+<option value="3">3 </option>
+<option value="4">4 </option>
+<option value="5">5 </option>
+<option value="6">6 </option>
+<option value="7">7 </option>
+
+</select>
+
+<textarea value="What a time to be alive!" id="sent-input"></textarea>
+
+<button id="button-ngrams">Get n-grams!</button>
+<div id="ngram-res"></div>
+</div>
+
+<script type="text/javascript">
+function nGrams(sentence, n) {
+  var words = sentence.split(/\W+/);
+  var total = words.length - n;
+  var grams = [];
+  for(var i = 0; i <= total; i++) {
+    var seq = '';
+    for (var j = i; j < i + n; j++) {
+      seq += ' ' + words[j];
+    }
+    grams.push(seq);
+  }
+  return grams;
+}
+
+document.getElementById("button-ngrams").addEventListener("click", () => {
+	var num = document.getElementById("num-n").value;
+	var sent = document.getElementById("sent-input").value;
+	
+	document.getElementById("ngram-res").innerHTML = nGrams(sent, parseInt(num));
+})
+</script>
+
+
 
 #Uses of n-grams
 
@@ -749,13 +888,508 @@ One use we can think of is, filtering the n-grams that are too frequent in the l
 The example we have is somehow wrong because when tokenizing based on n-grams all stopwords such `for`, `to`, `on` etc must be removed. Because they are simply too frequent.
 
 
-Another use is finding homopones.
+But there are other uses of n-grams which we will discuss now.
 
-n-grams are also useful in sentiment analysis, athought algoitmhs like VADER ignoreall of them.
+## Using n-grams in Conjunction with Stats
+
+### Using n-grams to Fill in the Holes
+
+If we, for example, have a bigram (that is to say, a 2-gram) we can approximate the probability of a word given all the previous words only by using the conditional probability of one preceding word, In the bigram of {hello, world} the conditional probablity of *word* can be estimated using the following formula:
+
+$$ P(wotld|hello) \simeq P(w_{world}|w_{1}^{hello}) \simeq P(w_{world}|w_{hello})  $$
+
+This is basically what's called a *Markov assumption* --- since this bigram makes a *Markov chain model*. In fact we can generalize this to trigrams where it would be $$ P(n|\left\{n - 2, n - 1\right\}) $$.
+
+<svg
+   width="175.38922mm"
+   height="74.159775mm"
+   viewBox="0 0 175.38922 74.159775"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0, 2021-09-20)"
+   sodipodi:docname="d2.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="0.75187991"
+     inkscape:cx="127.67996"
+     inkscape:cy="506.06486"
+     inkscape:window-width="1876"
+     inkscape:window-height="1016"
+     inkscape:window-x="3884"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid15853"
+       originx="-0.70833703"
+       originy="-14.790939" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-0.70833701,-14.790939)">
+    <ellipse
+       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:0.847026;stroke-miterlimit:4;stroke-dasharray:3.38809, 0.847026;stroke-dashoffset:0;stroke-opacity:1"
+       id="path61"
+       cx="62.854225"
+       cy="25.224689"
+       rx="15.391146"
+       ry="10.397597"
+       transform="matrix(0.99998088,0.00618458,-0.01370045,0.99990614,0,0)" />
+    <ellipse
+       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:0.847026;stroke-miterlimit:4;stroke-dasharray:3.38809, 0.847026;stroke-dashoffset:0;stroke-opacity:1"
+       id="path61-5"
+       cx="64.020996"
+       cy="49.057289"
+       rx="15.391146"
+       ry="10.397597"
+       transform="matrix(0.99998088,0.00618458,-0.01370045,0.99990614,0,0)" />
+    <ellipse
+       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:0.847026;stroke-miterlimit:4;stroke-dasharray:3.38809, 0.847026;stroke-dashoffset:0;stroke-opacity:1"
+       id="path61-5-3"
+       cx="64.910789"
+       cy="74.740112"
+       rx="15.391146"
+       ry="10.397597"
+       transform="matrix(0.99998088,0.00618458,-0.01370045,0.99990614,0,0)" />
+    <rect
+       style="fill:#b3b3b3;stroke:#000000;stroke-width:1.69465;stroke-miterlimit:4;stroke-dasharray:6.77861, 1.69465;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect3285"
+       width="40.777672"
+       height="63.5"
+       x="1.555662"
+       y="21.166666" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="9.7437677"
+       y="39.996296"
+       id="text6281"><tspan
+         sodipodi:role="line"
+         id="tspan6279"
+         style="stroke-width:0.264583"
+         x="9.7437677"
+         y="39.996296">pizza</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="9.7437677"
+         y="53.225422"
+         id="tspan6283">style</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="9.7437677"
+         y="66.454544"
+         id="tspan6285">dish</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:8.09458px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.202365"
+       x="53.74157"
+       y="26.831877"
+       id="text9157"
+       transform="scale(0.96889359,1.0321051)"><tspan
+         sodipodi:role="line"
+         id="tspan9155"
+         style="stroke-width:0.202365"
+         x="53.74157"
+         y="26.831877">pizza</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.37636px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.184409"
+       x="51.102074"
+       y="54.296791"
+       id="text12233"
+       transform="scale(1.0544853,0.94832996)"><tspan
+         sodipodi:role="line"
+         id="tspan12231"
+         style="stroke-width:0.184409"
+         x="51.102074"
+         y="54.296791">style</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.68085px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.192022"
+       x="51.590176"
+       y="83.617569"
+       id="text15045"
+       transform="scale(1.0700047,0.93457534)"><tspan
+         sodipodi:role="line"
+         id="tspan15043"
+         style="stroke-width:0.192022"
+         x="51.590176"
+         y="83.617569">dish</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 79.374999,26.458333 c 42.007721,16.232275 0,26.458333 0,26.458333"
+       id="path20196" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.300488px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 79.375,26.458333 c 30.10147,29.218094 0,47.625 0,47.625"
+       id="path20196-5" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="93.790695"
+       y="76.613434"
+       id="text24137"><tspan
+         sodipodi:role="line"
+         id="tspan24135"
+         style="stroke-width:0.264583"
+         x="93.790695"
+         y="76.613434">n - 2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="96.923218"
+       y="56.767879"
+       id="text24137-6"><tspan
+         sodipodi:role="line"
+         id="tspan24135-2"
+         style="stroke-width:0.264583"
+         x="96.923218"
+         y="56.767879">n - 1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="105.83333"
+       y="42.333332"
+       id="text33376"><tspan
+         sodi
+<svg
+   width="175.38922mm"
+   height="74.159775mm"
+   viewBox="0 0 175.38922 74.159775"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0, 2021-09-20)"
+   sodipodi:docname="d2.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="0.75187991"
+     inkscape:cx="127.67996"
+     inkscape:cy="506.06486"
+     inkscape:window-width="1876"
+     inkscape:window-height="1016"
+     inkscape:window-x="3884"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid15853"
+       originx="-0.70833703"
+       originy="-14.790939" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-0.70833701,-14.790939)">
+    <ellipse
+       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:0.847026;stroke-miterlimit:4;stroke-dasharray:3.38809, 0.847026;stroke-dashoffset:0;stroke-opacity:1"
+       id="path61"
+       cx="62.854225"
+       cy="25.224689"
+       rx="15.391146"
+       ry="10.397597"
+       transform="matrix(0.99998088,0.00618458,-0.01370045,0.99990614,0,0)" />
+    <ellipse
+       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:0.847026;stroke-miterlimit:4;stroke-dasharray:3.38809, 0.847026;stroke-dashoffset:0;stroke-opacity:1"
+       id="path61-5"
+       cx="64.020996"
+       cy="49.057289"
+       rx="15.391146"
+       ry="10.397597"
+       transform="matrix(0.99998088,0.00618458,-0.01370045,0.99990614,0,0)" />
+    <ellipse
+       style="fill:#b3b3b3;fill-rule:evenodd;stroke:#000000;stroke-width:0.847026;stroke-miterlimit:4;stroke-dasharray:3.38809, 0.847026;stroke-dashoffset:0;stroke-opacity:1"
+       id="path61-5-3"
+       cx="64.910789"
+       cy="74.740112"
+       rx="15.391146"
+       ry="10.397597"
+       transform="matrix(0.99998088,0.00618458,-0.01370045,0.99990614,0,0)" />
+    <rect
+       style="fill:#b3b3b3;stroke:#000000;stroke-width:1.69465;stroke-miterlimit:4;stroke-dasharray:6.77861, 1.69465;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect3285"
+       width="40.777672"
+       height="63.5"
+       x="1.555662"
+       y="21.166666" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="9.7437677"
+       y="39.996296"
+       id="text6281"><tspan
+         sodipodi:role="line"
+         id="tspan6279"
+         style="stroke-width:0.264583"
+         x="9.7437677"
+         y="39.996296">pizza</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="9.7437677"
+         y="53.225422"
+         id="tspan6283">style</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="9.7437677"
+         y="66.454544"
+         id="tspan6285">dish</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:8.09458px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.202365"
+       x="53.74157"
+       y="26.831877"
+       id="text9157"
+       transform="scale(0.96889359,1.0321051)"><tspan
+         sodipodi:role="line"
+         id="tspan9155"
+         style="stroke-width:0.202365"
+         x="53.74157"
+         y="26.831877">pizza</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:7.37636px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.184409"
+       x="51.102074"
+       y="54.296791"
+       id="text12233"
+       transform="scale(1.0544853,0.94832996)"><tspan
+         sodipodi:role="line"
+         id="tspan12231"
+         style="stroke-width:0.184409"
+         x="51.102074"
+         y="54.296791">style</tspan></text>
+    <text
+       xml:spapodi:role="line"
+         id="tspan33374"
+         style="stroke-width:0.264583"
+         x="105.83333"
+         y="42.333332">p(pizza|style)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="85.476982"
+       y="86.45475"
+       id="text33376-9"><tspan
+         sodipodi:role="line"
+         id="tspan33374-1"
+         style="stroke-width:0.264583"
+         x="85.476982"
+         y="86.45475">p(pizza|dish)</tspan></text>
+  </g>
+</svg>
+
+A Markov Chain can be described as a sequence of random 'states' where each new state is conditionally reliant on the previous state. So let's say...
+
+#### A Room Full of Monkeys and Typewriters: Generating Text with n-grams
+
+
+There's an age old question, can a room full of monkeys with type writers, vicariously and flippantly pressing the keys, collectively come up with a Shakespeare play?
+
+Actually, we can come up with an answer using basic n-grams. Not n-grams of words, but n-grams of characters. 
+
+Let's say we want these subordinate brute beasts to at least come up with one sentence:
+
+```
+to_be_or_not_to_be
+```
+
+Let's say we wish to calculate the probabiliteos of characters in tihs sentence appearing after the letter O.
+
+$$ \begin{cases} o & \underset{25\%}{\rightarrow} & t \\ o & \underset{25\%}{\rightarrow} &  r  \\ o & \underset{50\%}{\rightarrow} & \_  \end{cases}$$
+
+And we also have these:
+
+$$ \begin{cases} t & \underset{67\%}{\rightarrow} & o \\ t & \underset{33\%}{\rightarrow} &  \_  \end{cases}$$
+
+We can express this at:
+
+```
+'t' -> ['o', '_', 'o']
+'o' -> ['_', 'r', 't', '_']
+```
+
+Now we wish to generate a new text with these grams. We have to cold start it off wih a seed, that a is a node letter. Then we keep adding and adding iteratively until we a node that has nothing after it.
+
+Press the button below, select an initial click "Generate".
+
+<div style="display: flex; flex-direction: column; gap: 0.4rem;">
+<select id='char-input'>
+	<option value='t'>t</option>
+	<option value='o'>o</option>
+</select>
+<button id="gen-mc">Generare</button>
+<div id="gen-res">[Result]</div>
+</div>
+
+<script type="text/javascript">
+var ngrams_ = {
+  't': ['o', '_', 'o'],
+  'o': ['_', 'r', 't', '_']
+};
+
+document.getElementById("gen-mc").addEventListener("click", () => {
+var txt = document.getElementById("char-input").value;
+var head = [txt];
+for (var i = 0; i < 15; i++) {
+  var possible = ngrams_[head[i]];
+  if (!possible) {
+    break;
+  }
+  var r = Math.floor(Math.random() * (possible.length));
+  var next = possible[r];
+
+	txt = next;
+  head.push(next);
+  document.getElementById("gen-res").innerHTML = head.join('');
+  
+}
+
+
+})
 
 
 
-## Using n-grams the smart way!
+</script>
+
+
+Now we can do this, instead of bigrams of characters, let's o bigrams of phonemes. The basis is the same. Select an initial phoneme and see the code do its magic.
+
+<div style="display: flex; flex-direction: column; gap: 0.4rem;">
+<select id='ph-input'>
+<option value="to">to</option>
+<option value="o ">o </option>
+<option value=" b"> b</option>
+<option value="be">be</option>
+<option value="e ">e </option>
+<option value=" o"> o</option>
+<option value="or">or</option>
+<option value="r ">r </option>
+<option value=" n"> n</option>
+<option value="no">no</option>
+<option value="ot">ot</option>
+<option value="t ">t </option>
+<option value=" t"> t</option>
+<option value="e,">e,</option>
+<option value=", ">, </option>
+<option value="th">th</option>
+<option value="ha">ha</option>
+<option value="at">at</option>
+<option value=" i"> i</option>
+<option value="is">is</option>
+<option value="s ">s </option>
+<option value="he">he</option>
+<option value=" q"> q</option>
+<option value="qu">qu</option>
+<option value="ue">ue</option>
+<option value="es">es</option>
+<option value="st">st</option>
+<option value="ti">ti</option>
+<option value="io">io</option>
+<option value="on">on</option>
+</select>
+<div id="ph-res">[Result]</div>
+</div>
+
+<script type="text/javascript">
+var ngrams = {
+   "to": [ " ", ", " ],
+   "o ": [ "b", "b" ],
+   " b": [ "e", "e" ],
+   "be": [ " ", "," ],
+   "e ": [ "o", "q" ],
+   " o": [ "r" ],
+   "or": [ " " ],
+   "r ": [ "n" ],
+   " n": [ "o" ],
+   "no": [ "t" ],
+   "ot": [ " " ],
+   "t ": [ "t", "i" ],
+   " t": [ "o", "h", "h" ],
+   "e,": [ " " ],
+   ", ": [ "t" ],
+   "th": [ "a", "e" ],
+   "ha": [ "t" ],
+   "at": [ " " ],
+   " i": [ "s" ],
+   "is": [ " " ],
+   "s ": [ "t" ],
+   "he": [ " " ],
+   " q": [ "u" ],
+   "qu": [ "e" ],
+   "ue": [ "s" ],
+   "es": [ "t" ],
+   "st": [ "i" ],
+   "ti": [ "o" ],
+   "io": [ "n" ],
+   "on": [ "." ]
+};
+function choice(somelist) {
+  var i = Math.floor(Math.random() * (somelist.length));
+  return somelist[i];
+}
+
+
+document.getElementById('ph-input').addEventListener('change', () => {
+	var current = document.getElementById('ph-input').value;
+	var output = current;
+	
+	for (var i = 0; i < 20; i++) {
+  if (ngrams.hasOwnProperty(current)) {
+    var possible = ngrams[current];
+    var next = choice(possible);
+	
+    output += next;
+	console.log("----")
+	console.log(output)
+
+	document.getElementById("ph-res").innerHTML = output;
+    current = output.substring(output.length - next.length, output.length);
+	console.log(current)
+  } else {
+    break;
+  }
+}
+})
+
+
+
+
+</script>
+
+
+
+### Using n-grams and Stats to tell the Future!
 
 So, as it turns out, if you have data in forms of n-grams, you can associatively predict the next part of the n-gram.
 
@@ -765,6 +1399,25 @@ And this is exactly what [this little project](https://github.com/elsehow/aarons
 
 So it's not just NLP where n-grams are useful in but also porbabilities. In fact we could say successive failures in getting head (!) in a coin toss game is by itself a practie in n-grams.
 
+
+## Using n-grams to Fix and Highlight Errors
+
+It is estimated that there are over 760 million EFL (English as Foreign Language) and 350 ESL (English as Second Language) speakers around the globe. With this volume of people who were not exposed to English from dat one, and people who associate English grammar and semantics with that of their native tongue, then there is definitely going to need for grammar-correcton software.
+
+But how would these software achieve detecting of wrong grammar?
+
+One way, of course, is n-grams. But n-grams alone cannot be used to detect errors. We need tagging alongside it, and then we need to annotate various related corpora with these tags, train a shallow or a deep classifier with bigrams or trigrams of of words.
+
+Imagine these sentences:
+
+```
+1. I accuse you of make a bad decision!
+2. I accuse you of making a bad decision!
+```
+
+Use the n-gram gnerator above to get the trigrams. If you do so, you'll realize the only difference between these two sentences is one simple n-gram.
+
+We just need to do Maximum Likelihood (basially Bayesian stats) Calculation with the tagged n-grams to catch the error. The likelihood of a trigram containing 'bad' appearing in this sentence is less than a set threshold so the label would be 0, and this sentence would be wrong.
 
 
 ##### About the Author
