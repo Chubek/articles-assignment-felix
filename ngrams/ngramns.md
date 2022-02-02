@@ -1417,7 +1417,36 @@ Imagine these sentences:
 
 Use the n-gram gnerator above to get the trigrams. If you do so, you'll realize the only difference between these two sentences is one simple n-gram.
 
-We just need to do Maximum Likelihood (basially Bayesian stats) Calculation with the tagged n-grams to catch the error. The likelihood of a trigram containing 'bad' appearing in this sentence is less than a set threshold so the label would be 0, and this sentence would be wrong.
+We just need to do Maximum Likelihood (basially Bayesian stats) Calculation with the tagged n-grams to catch the error. The likelihood of a trigram containing 'bad' appearing in this sentence is less than a set threshold (most often 0.5) so the label would be 0, and this sentence would be wrong.
+
+### Making Sense of Nonesense Using n-grams
+
+Every teenager who's used MCs t generate text knows this, they most often generate total nonesense. The idea of generating 'sensible' (not sensual!) text using n-grams is, that the last word ($$ x^{n} $$) of the n-gram can be inferred from th other words that appear in it. So in the context of a bigram, let's say, `jimbo soup` the context of `jimbo` can be inferred from `soup`. Remember this from 2 minutes ago?
+
+$$ P(x^{(t + 1)} | x^t, \dots, x^{(1)}) $$
+
+And remember Baye's rule which we incited half a minute ago? (or less than 5 second, depending on whether you're actually reading this article).
+
+$$ P(x^{t + 1} | x^t, \dots, x^{t - n + 2}) = \frac{P(x^{t + 1}, x^t, \dots, x^{t - n + 2}))}{P(x^t, \dots, x^{t - n + 2})} $$
+
+So imagine we have the following strings of words:
+
+```
+- deep dish samurai septugenarian carwash next
+- The septugenarian Samurai ordered deep dish pizza next to the carwash.
+```
+
+Now imagine we have scoured thousands of text, and we know this to be true:
+
+```
+P(dish | deep, piza) = 0.8
+```
+
+So we apply this to the first text, and nope! But the first text, yay!
+
+And that's how we make sense of a text using n-grams.
+
+
 
 
 ##### About the Author
